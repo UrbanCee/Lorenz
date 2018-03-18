@@ -38,38 +38,29 @@ void LorenzCalc::nextStep(double dT)
 
 
 
+CLorezLine::CLorezLine()
+    : CBaseObjectFactory("Lorenz Line",":/Shader/texturedLine.vert",":/Shader/texturedLine.frag")
+{}
 
-bool CLorezLine::initialize(QObject *parent)
+CLorezLine::~CLorezLine()
 {
-
-    gl = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_4_0_Core>();
-
-    if (!gl)
-    {
-        qDebug() << "OpenGLFunctions not initialized or not supported";
-        return false;
-    }
-    bool bOk=true;
-    m_program = new QOpenGLShaderProgram(parent);
-    m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/Shader/texturedLine.vert");
-    m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/Shader/texturedLine.frag");
-    bOk=bOk && m_program->link();
-    qDebug() << "Lorentz Line Shader Log: " << m_program->log();
-    createBuffers();
-    return bOk;
+    deleteObject();
 }
 
 bool CLorezLine::createBuffers()
 {
-    QImage img2(16,1,QImage::Format_RGB32);
-    for (int i=0;i<16;i++)
+    QImage img3(1024,1,QImage::Format_RGB32);
+    img3.fill(Qt::black);
+    for (int i=0;i<64;i++)
     {
-        QColor col;
-        col.setHsv((i*360)/16,255,255);
-        img2.setPixelColor(i,0,col);
+        QColor col(255-i*4,255-i*4,255-i*4,255);
+        img3.setPixelColor(1023-i,0,col);
     }
 
-    textureTest = new QOpenGLTexture(img2);
+    textureTest = new QOpenGLTexture(img3);
+    textureTest->setMagnificationFilter(QOpenGLTexture::Nearest);
+    textureTest->setMinificationFilter(QOpenGLTexture::Nearest);
+    textureTest->setWrapMode(QOpenGLTexture::Repeat);
 
     gl->glGenVertexArrays(NumVAOs,VAOs);
     gl->glBindVertexArray(VAOs[BasicObject]);
@@ -97,7 +88,7 @@ bool CLorezLine::createBuffers()
          vertexColors[i*3]=col.redF();
          vertexColors[i*3+1]=col.greenF();
          vertexColors[i*3+2]=col.blueF();
-         vertexTexCoords[i]=i/100.0f;
+         vertexTexCoords[i]=i/500.0f;
      }
 
      for (int i=0;i<16;i++)
@@ -146,26 +137,27 @@ bool CLorezLine::createBuffers()
     return true;
 }
 
-bool CLorezLine::paint(QMatrix4x4 mat)
+void CLorezLine::deleteBuffers()
 {
-    m_program->bind();
-    gl->glBindVertexArray(VAOs[BasicObject]);
+    gl->glDeleteBuffers(NumBuffers,Buffers);
+    gl->glDeleteBuffers(NumTextures,Textures);
+}
 
-
+void CLorezLine::uniformsAndDraw()
+{
     gl->glDisable(GL_CULL_FACE);
-    m_program->setUniformValue("mvp_matrix",mat);
-    texOffset-=0.02f;
+    texOffset-=0.001f;
     m_program->setUniformValue("texOffset",texOffset);
     m_program->setUniformValue("tex", 0); //set to 0 because the texture is bound to GL_TEXTURE0
+    m_program->setUniformValue("highlight", 1); //set to 1 because the texture is bound to GL_TEXTURE0
     gl->glActiveTexture(GL_TEXTURE0);
     gl->glBindTexture(GL_TEXTURE_1D, Textures[HSVtexture]);
+    gl->glActiveTexture(GL_TEXTURE1);
+    textureTest->bind();
     gl->glDrawArrays(GL_LINE_STRIP,0,iNumOfPoints);
-
+    gl->glActiveTexture(GL_TEXTURE1);
+    textureTest->release();
+    gl->glActiveTexture(GL_TEXTURE0);
     gl->glBindTexture(GL_TEXTURE_1D,0);
-    gl->glBindVertexArray(0);
-
-
-    return true;
-
 }
 

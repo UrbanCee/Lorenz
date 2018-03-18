@@ -83,6 +83,7 @@ bool CBaseObjectFactory::paint(const QMatrix4x4 &modelViewProjectionMatrix, cons
     bOk=bOk&&m_program->bind();
     if (!bOk || VAOs[BaseObject]==0)
         return bOk;
+    m_program->setUniformValue("projection_matrix",projectionMatrix);
     return paint(modelViewProjectionMatrix,modelViewMatrix,normalMatrix);
 }
 

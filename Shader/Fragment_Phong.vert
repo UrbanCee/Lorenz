@@ -9,6 +9,7 @@ uniform mat4 modelview_matrix;
 out vec3 norm;
 out vec3 pos;
 
+mat4 billboard=modelview_matrix;
 
 void main()
 {

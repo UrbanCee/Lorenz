@@ -18,12 +18,15 @@ class LorenzCalc
 };
 
 
-class CLorezLine
+class CLorezLine : public CBaseObjectFactory
 {
 public:
-    bool initialize(QObject *);
-    bool createBuffers();
-    bool paint(QMatrix4x4 mat);
+    CLorezLine();
+    ~CLorezLine();
+protected:
+    virtual bool createBuffers();
+    virtual void uniformsAndDraw();
+    virtual void deleteBuffers();
 
 private:
     enum VAO_IDs { BasicObject, NumVAOs };
@@ -32,12 +35,8 @@ private:
     enum Texture_IDs { HSVtexture, NumTextures};
 
 
-    GLuint VAOs[NumVAOs];
     GLuint Buffers[NumBuffers];
     GLuint Textures[NumTextures];
-
-    QOpenGLShaderProgram *m_program;
-    QOpenGLFunctions_4_0_Core* gl = 0;
 
     QOpenGLTexture *textureTest;
 

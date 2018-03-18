@@ -33,7 +33,6 @@ protected:
     void keyPressEvent(QKeyEvent *);
 
 
-    CLorezLine *lorenzLine;
 private:
     QMatrix4x4 projection, transformation, currRot, transRotOnly;
     QVector2D rotStartPos;
@@ -45,8 +44,8 @@ private:
     QTimer *timer;
 
 
-    CCoordSys coordSys;
-    CToroid toroid;
+    CCoordSys *coordSys;
+    CLorezLine *lorenzLine;
 
 
 

@@ -3,7 +3,7 @@
 #include <QMouseEvent>
 
 MyGLWidget::MyGLWidget(QWidget *parent)
-    : QOpenGLWidget(parent), QOpenGLFunctions_4_0_Core(), bRotate(false),zoomFactor(5.0f),oldMouseX(0),oldMouseY(0)
+    : QOpenGLWidget(parent), QOpenGLFunctions_4_0_Core(), bRotate(false),zoomFactor(50.0f),oldMouseX(0),oldMouseY(0)
 {
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
@@ -13,7 +13,6 @@ MyGLWidget::MyGLWidget(QWidget *parent)
 
 MyGLWidget::~MyGLWidget()
 {
-
 }
 
 void MyGLWidget::initializeGL()
@@ -22,11 +21,12 @@ void MyGLWidget::initializeGL()
     glEnable(GL_DEPTH_TEST);
     QString versionString1(QLatin1String(reinterpret_cast<const char*>(glGetString(GL_VERSION))));
     emit(showStatusBarMessage(QString("OpenGL Version: ")+versionString1,10000));
-    coordSys.initialize(this);
-    toroid.initialize(this);
-
-//    lorenzLine = new CLorezLine();
-//    lorenzLine->initialize(this);
+    coordSys = new CCoordSys();
+    lorenzLine = new CLorezLine();
+    coordSys->initialize(this);
+    //toroid.initialize(this);
+    transformation.translate(0.0f,0.0f,-20.0f);
+    lorenzLine->initialize(this);
 }
 
 void MyGLWidget::resizeGL(int w, int h)
@@ -55,11 +55,9 @@ void MyGLWidget::paintGL()
     QMatrix4x4 mvp_Matrix=projection*matrix;
 
     normalMatrix=matrix.inverted().transposed();
-    //cuboid.paint(projection,matrix);
-    toroid.paint(mvp_Matrix,matrix,normalMatrix);
-    //plane.paint(projection,matrix);
+    lorenzLine->paint(mvp_Matrix);
     mvp_Matrix=projection*coordSysMatrix;
-    coordSys.paint(mvp_Matrix);
+    coordSys->paint(mvp_Matrix);
 }
 
 
@@ -97,12 +95,12 @@ void MyGLWidget::mouseMoveEvent(QMouseEvent *e)
 
     }else if (e->buttons() == Qt::RightButton){
         QMatrix4x4 translation;
-        translation.translate(dX*5.0,-dY*5.0);
+        translation.translate(dX*zoomFactor,-dY*zoomFactor);
         transformation=translation*transformation;
     }
     else if (e->buttons() == Qt::MidButton){
         QMatrix4x4 translation;
-        translation.translate(0.0f,0.0f,dY*5.0);
+        translation.translate(0.0f,0.0f,dY*zoomFactor);
         transformation=translation*transformation;
     }
     else if (e->buttons() == (Qt::LeftButton | Qt::RightButton))
