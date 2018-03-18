@@ -4,5 +4,11 @@
         <file>Shader/basic.vert</file>
         <file>Shader/texturedLine.frag</file>
         <file>Shader/texturedLine.vert</file>
+        <file>Shader/CoordSys.frag</file>
+        <file>Shader/CoordSys.vert</file>
+        <file>Shader/Cuboid.frag</file>
+        <file>Shader/Cuboid.vert</file>
+        <file>Shader/Fragment_Phong.frag</file>
+        <file>Shader/Fragment_Phong.vert</file>
     </qresource>
 </RCC>

@@ -1,15 +1,13 @@
 #ifndef MYGLWIDGET_H
 #define MYGLWIDGET_H
-#include "renderobjects.h"
+
+#include "lorenzobjects.h"
 
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions_4_0_Core>
 #include <QOpenGLShaderProgram>
 #include <QVector3D>
 
-
-QT_FORWARD_DECLARE_CLASS(QTimer)
-QT_FORWARD_DECLARE_CLASS(QMouseEvent)
 
 
 class MyGLWidget : public QOpenGLWidget, QOpenGLFunctions_4_0_Core
@@ -20,23 +18,43 @@ public:
     explicit MyGLWidget(QWidget *parent);
     ~MyGLWidget();
 
+signals:
+    showStatusBarMessage(QString,int);
+
+
 protected:
     void initializeGL();
-    void resizeGL(int w, int h);
     void paintGL();
+    void resizeGL(int w, int h);
+
     void mousePressEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
+    void wheelEvent(QWheelEvent *);
+    void keyPressEvent(QKeyEvent *);
+
 
     CLorezLine *lorenzLine;
-    QMatrix4x4 projection, transformation, currRot;
-    QVector3D rotStartPos;
+private:
+    QMatrix4x4 projection, transformation, currRot, transRotOnly;
+    QVector2D rotStartPos;
     bool bRotate;
+    float zoomFactor;
     int oldMouseX,oldMouseY;
 
 
     QTimer *timer;
 
+
+    CCoordSys coordSys;
+    CToroid toroid;
+
+
+
+private:
+    void startRotation(int, int);
+    void stopRotation();
+    void updateProjectionMatrix(int w, int h);
 };
 
 

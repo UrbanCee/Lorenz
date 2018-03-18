@@ -26,11 +26,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += main.cpp\
         mainwindow.cpp \
     myglwidget.cpp \
-    renderobjects.cpp
+    renderobjects.cpp \
+    lorenzobjects.cpp \
+    matsnlights.cpp
 
 HEADERS  += mainwindow.h \
     myglwidget.h \
-    renderobjects.h
+    renderobjects.h \
+    lorenzobjects.h \
+    matsnlights.h
 
 FORMS    += mainwindow.ui
 

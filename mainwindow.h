@@ -18,6 +18,9 @@ public:
 
 private:
     Ui::MainWindow *ui;
+public slots:
+    void showStatusBarMessage(const QString &message,int iMessageTimeMS);
+
 };
 
 #endif // MAINWINDOW_H
