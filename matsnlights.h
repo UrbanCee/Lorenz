@@ -6,8 +6,8 @@
 #include <QColor>
 #include <QVector3D>
 
-class QOpenGLShaderProgram;
-class QOpenGLFunctions_4_0_Core;
+QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
+QT_FORWARD_DECLARE_CLASS(QOpenGLFunctions_4_0_Core)
 
 
 class CMaterial

@@ -6,7 +6,6 @@
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions_4_0_Core>
 #include <QOpenGLShaderProgram>
-#include <QVector3D>
 
 
 

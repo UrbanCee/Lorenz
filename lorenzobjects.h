@@ -3,7 +3,7 @@
 
 #include "renderobjects.h"
 
-class QOpenGLTexture;
+QT_FORWARD_DECLARE_CLASS(QOpenGLTexture)
 
 class LorenzCalc
 {
