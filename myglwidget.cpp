@@ -36,6 +36,8 @@ void MyGLWidget::resizeGL(int w, int h)
     // Set perspective projection
     projection.perspective(fov, aspect, zNear, zFar);
 
+    //test
+
 }
 
 void MyGLWidget::paintGL()
