@@ -17,6 +17,17 @@ double LorenzCalc::c=8/3;
 
 bool CLorenzLine::texturesCreated = false;
 GLuint CLorenzLine::Textures[CLorenzLine::NumTextures];
+int CLorenzLine::iIterationSteps = 10000;
+double CLorenzLine::dIterationDT = 0.01;
+
+bool CLorenzLine::bHSVLorenzLine=true;
+bool CLorenzLine::bColoredLorenzLines=false;
+QVector3D CLorenzLine::startPosRed(0.0f,10.1f,0.0f);
+QVector3D CLorenzLine::startPosBlue(0.0f,10.0f,0.1f);
+QVector3D CLorenzLine::startPosGreen(0.1f,10.0f,0.0f);
+QVector3D CLorenzLine::startPosHSV(0.0f,10.0f,0.0f);
+bool CLorenzLine::bShowRGBLines=false;
+bool CLorenzLine::bShowHSVLine=true;
 
 
 
@@ -40,8 +51,8 @@ void LorenzCalc::nextStep(double dT)
 
 
 
-CLorenzLine::CLorenzLine()
-    : CBaseObjectFactory("Lorenz Line",":/Shader/texturedLine.vert",":/Shader/texturedLine.frag")
+CLorenzLine::CLorenzLine(const QVector3D &startPoint=CLorenzLine::startPosHSV,LorenzLineTypes type=HSVType)
+    : CBaseObjectFactory("Lorenz Line",":/Shader/texturedLine.vert",":/Shader/texturedLine.frag"),type(type),vStartPos(startPoint)
 {}
 
 CLorenzLine::~CLorenzLine()
@@ -51,30 +62,28 @@ CLorenzLine::~CLorenzLine()
 
 bool CLorenzLine::createBuffers()
 {
-
-    gl->glGenVertexArrays(NumVAOs,VAOs);
-    gl->glBindVertexArray(VAOs[BasicObject]);
-
+     iNumOfPoints=CLorenzLine::iIterationSteps;
 
 
      GLfloat *vertexCoords = new GLfloat[iNumOfPoints*3];
      GLfloat *vertexColors = new GLfloat[iNumOfPoints*3];
      GLfloat *vertexTexCoords = new GLfloat[iNumOfPoints];
 
-     LorenzCalc lor(0.0,10.0,0.0);
+     LorenzCalc lor(vStartPos.x(),vStartPos.y(),vStartPos.z());
 
 
 
      for (int i=0;i<iNumOfPoints;i++)
      {
-         lor.nextStep(0.001);
+         lor.nextStep(CLorenzLine::dIterationDT);
          vertexCoords[i*3]=(GLfloat) lor.x;
          vertexCoords[i*3+1]=(GLfloat) lor.y;
          vertexCoords[i*3+2]=(GLfloat) lor.z;
-         vertexTexCoords[i]=i/500.0f;
+         vertexTexCoords[i]=i/(50000*CLorenzLine::dIterationDT);
      }
 
 
+    gl->glBindVertexArray(VAOs[BasicObject]);
 
     gl->glGenBuffers(NumBuffers,Buffers);
 
@@ -195,7 +204,14 @@ void CLorenzLine::uniformsAndDraw()
     m_program->setUniformValue("tex", 0); //set to 0 because the texture is bound to GL_TEXTURE0
     m_program->setUniformValue("highlight", 1); //set to 1 because the texture is bound to GL_TEXTURE0
     gl->glActiveTexture(GL_TEXTURE0);
-    gl->glBindTexture(GL_TEXTURE_1D, Textures[RedTexture]);
+    if (type==HSVType)
+        gl->glBindTexture(GL_TEXTURE_1D, Textures[HSVtexture]);
+    else if (type==RedType)
+        gl->glBindTexture(GL_TEXTURE_1D, Textures[RedTexture]);
+    else if (type==GreenType)
+        gl->glBindTexture(GL_TEXTURE_1D, Textures[GreenTexture]);
+    else if (type==BlueType)
+        gl->glBindTexture(GL_TEXTURE_1D, Textures[BlueTexture]);
     gl->glActiveTexture(GL_TEXTURE1);
     gl->glBindTexture(GL_TEXTURE_1D, Textures[HighlightTexture]);
     gl->glDrawArrays(GL_LINE_STRIP,0,iNumOfPoints);

@@ -20,6 +20,8 @@ private:
     Ui::MainWindow *ui;
 public slots:
     void showStatusBarMessage(const QString &message,int iMessageTimeMS);
+    void updateLorenzLineData();
+    void updateLorenzLineProperties();
 
 };
 

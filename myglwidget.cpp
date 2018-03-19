@@ -7,12 +7,21 @@ MyGLWidget::MyGLWidget(QWidget *parent)
 {
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-    grabKeyboard();
 }
 
 
 MyGLWidget::~MyGLWidget()
 {
+}
+
+void MyGLWidget::updateLorenzLine()
+{
+    makeCurrent();
+     foreach(CLorenzLine *line, lorenzLines)
+    {
+        line->redoBuffers();
+    }
+     doneCurrent();
 }
 
 void MyGLWidget::initializeGL()
@@ -22,11 +31,16 @@ void MyGLWidget::initializeGL()
     QString versionString1(QLatin1String(reinterpret_cast<const char*>(glGetString(GL_VERSION))));
     emit(showStatusBarMessage(QString("OpenGL Version: ")+versionString1,10000));
     coordSys = new CCoordSys();
-    lorenzLine = new CLorenzLine();
+    lorenzLines.append(new CLorenzLine(CLorenzLine::startPosHSV,CLorenzLine::HSVType));
+    lorenzLines.append(new CLorenzLine(CLorenzLine::startPosRed,CLorenzLine::RedType));
+    lorenzLines.append(new CLorenzLine(CLorenzLine::startPosGreen,CLorenzLine::GreenType));
+    lorenzLines.append(new CLorenzLine(CLorenzLine::startPosBlue,CLorenzLine::BlueType));
     coordSys->initialize(this);
     //toroid.initialize(this);
     transformation.translate(0.0f,0.0f,-20.0f);
-    lorenzLine->initialize(this);
+    foreach (CLorenzLine *lorenzLine, lorenzLines) {
+        lorenzLine->initialize(this);
+    }
 }
 
 void MyGLWidget::resizeGL(int w, int h)
@@ -55,7 +69,15 @@ void MyGLWidget::paintGL()
     QMatrix4x4 mvp_Matrix=projection*matrix;
 
     normalMatrix=matrix.inverted().transposed();
-    lorenzLine->paint(mvp_Matrix);
+    if (CLorenzLine::bShowHSVLine)
+        lorenzLines[0]->paint(mvp_Matrix);
+    if (CLorenzLine::bShowRGBLines)
+    {
+        for (int i=1;i<4;i++)
+        {
+            lorenzLines[i]->paint(mvp_Matrix);
+        }
+    }
     mvp_Matrix=projection*coordSysMatrix;
     coordSys->paint(mvp_Matrix);
 }
@@ -139,9 +161,7 @@ void MyGLWidget::keyPressEvent(QKeyEvent *e)
 {
     if (e->key() == Qt::Key_Left)
     {
-        this->makeCurrent();
-        //toroid.reshapeTorus(1000,1000);
-        this->doneCurrent();
+
     }
 }
 

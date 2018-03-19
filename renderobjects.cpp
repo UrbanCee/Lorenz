@@ -55,6 +55,12 @@ void CBaseObjectFactory::deleteObject()
     deleteBuffers();
     VAOs[BaseObject]=0;
 }
+
+void CBaseObjectFactory::redoBuffers()
+{
+    deleteBuffers();
+    createBuffers();
+}
 bool CBaseObjectFactory::paint(const QMatrix4x4 &modelViewProjectionMatrix)
 {
     bOk=bOk&&m_program->bind();

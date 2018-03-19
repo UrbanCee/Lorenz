@@ -21,6 +21,7 @@ public:
     bool paint(const QMatrix4x4 &modelViewProjection,const QMatrix4x4 &projectionMatrix, const QMatrix4x4 &modelViewMatrix, const QMatrix4x4 &normalMatrix);
     bool createObject();
     void deleteObject();
+    void redoBuffers();
 protected:
     virtual bool createBuffers() = 0;
     virtual void uniformsAndDraw() = 0;

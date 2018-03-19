@@ -17,6 +17,8 @@ public:
     explicit MyGLWidget(QWidget *parent);
     ~MyGLWidget();
 
+    void updateLorenzLine();
+
 signals:
     showStatusBarMessage(QString,int);
 
@@ -45,7 +47,7 @@ private:
 
 
     CCoordSys *coordSys;
-    CLorenzLine *lorenzLine;
+    QVector<CLorenzLine *> lorenzLines;
 
 
 

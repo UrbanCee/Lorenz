@@ -2,6 +2,7 @@
 #define LORENZOBJECTS_H
 
 #include "renderobjects.h"
+#include <QVector3D>
 
 QT_FORWARD_DECLARE_CLASS(QOpenGLTexture)
 
@@ -21,8 +22,20 @@ class LorenzCalc
 class CLorenzLine : public CBaseObjectFactory
 {
 public:
-    CLorenzLine();
+    enum LorenzLineTypes {HSVType,RedType,GreenType,BlueType} type;
+    CLorenzLine(const QVector3D &, LorenzLineTypes type);
     ~CLorenzLine();
+
+    static int iIterationSteps;
+    static double dIterationDT;
+    static bool bHSVLorenzLine;
+    static bool bColoredLorenzLines;
+    static QVector3D startPosRed;
+    static QVector3D startPosBlue;
+    static QVector3D startPosGreen;
+    static QVector3D startPosHSV;
+    static bool bShowRGBLines;
+    static bool bShowHSVLine;
 protected:
     virtual bool createBuffers();
     virtual void uniformsAndDraw();
@@ -44,6 +57,9 @@ private:
     float texOffset=0.0f;
 
     static bool texturesCreated;
+
+    QVector3D vStartPos;
+
 
 
 };
