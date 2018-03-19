@@ -15,6 +15,8 @@ double LorenzCalc::a=10;
 double LorenzCalc::b=28;
 double LorenzCalc::c=8/3;
 
+bool CLorenzLine::texturesCreated = false;
+GLuint CLorenzLine::Textures[CLorenzLine::NumTextures];
 
 
 
@@ -38,29 +40,17 @@ void LorenzCalc::nextStep(double dT)
 
 
 
-CLorezLine::CLorezLine()
+CLorenzLine::CLorenzLine()
     : CBaseObjectFactory("Lorenz Line",":/Shader/texturedLine.vert",":/Shader/texturedLine.frag")
 {}
 
-CLorezLine::~CLorezLine()
+CLorenzLine::~CLorenzLine()
 {
     deleteObject();
 }
 
-bool CLorezLine::createBuffers()
+bool CLorenzLine::createBuffers()
 {
-    QImage img3(1024,1,QImage::Format_RGB32);
-    img3.fill(Qt::black);
-    for (int i=0;i<64;i++)
-    {
-        QColor col(255-i*4,255-i*4,255-i*4,255);
-        img3.setPixelColor(1023-i,0,col);
-    }
-
-    textureTest = new QOpenGLTexture(img3);
-    textureTest->setMagnificationFilter(QOpenGLTexture::Nearest);
-    textureTest->setMinificationFilter(QOpenGLTexture::Nearest);
-    textureTest->setWrapMode(QOpenGLTexture::Repeat);
 
     gl->glGenVertexArrays(NumVAOs,VAOs);
     gl->glBindVertexArray(VAOs[BasicObject]);
@@ -70,7 +60,6 @@ bool CLorezLine::createBuffers()
      GLfloat *vertexCoords = new GLfloat[iNumOfPoints*3];
      GLfloat *vertexColors = new GLfloat[iNumOfPoints*3];
      GLfloat *vertexTexCoords = new GLfloat[iNumOfPoints];
-     GLfloat *hsvColors = new GLfloat[16*3];
 
      LorenzCalc lor(0.0,10.0,0.0);
 
@@ -78,27 +67,13 @@ bool CLorezLine::createBuffers()
 
      for (int i=0;i<iNumOfPoints;i++)
      {
-         //double dRelative = (double) i / (double) iNumOfPoints;
-         QColor col;
-         col.setHsv((9*i)%360,255,255);
-         lor.nextStep(0.01);
+         lor.nextStep(0.001);
          vertexCoords[i*3]=(GLfloat) lor.x;
          vertexCoords[i*3+1]=(GLfloat) lor.y;
          vertexCoords[i*3+2]=(GLfloat) lor.z;
-         vertexColors[i*3]=col.redF();
-         vertexColors[i*3+1]=col.greenF();
-         vertexColors[i*3+2]=col.blueF();
          vertexTexCoords[i]=i/500.0f;
      }
 
-     for (int i=0;i<16;i++)
-     {
-         QColor col;
-         col.setHsv((i*360)/16,255,255);
-         hsvColors[i*3]=col.redF();
-         hsvColors[i*3+1]=col.greenF();
-         hsvColors[i*3+2]=col.blueF();
-     }
 
 
     gl->glGenBuffers(NumBuffers,Buffers);
@@ -108,42 +83,111 @@ bool CLorezLine::createBuffers()
     gl->glEnableVertexAttribArray(vVertexPosition);
     gl->glVertexAttribPointer(vVertexPosition,3,GL_FLOAT,GL_FALSE,0,BUFFER_OFFSET(0));
 
-    gl->glBindBuffer(GL_ARRAY_BUFFER,Buffers[ColorBuffer]);
-    gl->glBufferData(GL_ARRAY_BUFFER,sizeof(GLfloat)*iNumOfPoints*3,vertexColors, GL_STATIC_DRAW);
-    gl->glEnableVertexAttribArray(vVertexColor);
-    gl->glVertexAttribPointer(vVertexColor,3,GL_FLOAT,GL_FALSE,0,BUFFER_OFFSET(0));
-
-
     gl->glBindBuffer(GL_ARRAY_BUFFER,Buffers[TextCoordBuffer]);
     gl->glBufferData(GL_ARRAY_BUFFER,sizeof(GLfloat)*iNumOfPoints,vertexTexCoords, GL_STATIC_DRAW);
     gl->glEnableVertexAttribArray(vVertexTexCoord);
     gl->glVertexAttribPointer(vVertexTexCoord,1,GL_FLOAT,GL_FALSE,0,BUFFER_OFFSET(0));
 
-
-     gl->glGenTextures(NumTextures,Textures );
-     gl->glBindTexture(GL_TEXTURE_1D, Textures[HSVtexture]);
-     gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-     gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-     gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-     gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-     gl->glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 16, 0, GL_RGB, GL_FLOAT, hsvColors);
-     gl->glBindTexture(GL_TEXTURE_1D,0);
+    if (!texturesCreated)
+        createTextures(gl);
 
     gl->glBindVertexArray(0);
 
     delete[] vertexCoords;
     delete[] vertexColors;
-    delete[] hsvColors;
     return true;
 }
 
-void CLorezLine::deleteBuffers()
+void CLorenzLine::deleteBuffers()
 {
     gl->glDeleteBuffers(NumBuffers,Buffers);
-    gl->glDeleteBuffers(NumTextures,Textures);
 }
 
-void CLorezLine::uniformsAndDraw()
+void CLorenzLine::createTextures(QOpenGLFunctions_4_0_Core *gl)
+{
+    GLfloat *hsvColors = new GLfloat[16*3];
+    GLfloat *highlight = new GLfloat[1024*3];
+    GLfloat *red = new GLfloat[2*3];
+    GLfloat *green = new GLfloat[2*3];
+    GLfloat *blue = new GLfloat[2*3];
+
+    for (int i=0;i<16;i++)
+    {
+        QColor col;
+        col.setHsv((i*360)/16,255,255);
+        hsvColors[i*3]=col.redF();
+        hsvColors[i*3+1]=col.greenF();
+        hsvColors[i*3+2]=col.blueF();
+    }
+    for (int i=0;i<6;i++)
+    {
+        red[i]=0;
+        green[i]=0;
+        blue[i]=0;
+    }
+    for (int i=0;i<2;i++)
+    {
+        red[3*i]=1.0f;
+        green[3*i+1]=1.0f;
+        blue[3*i+2]=1.0f;
+    }
+    for (int i=0;i<1024;i++)
+    {
+        GLfloat val=(i<992?0.0f:(i-991.0f)/32.0f);
+        for (int j=0;j<3;j++)
+            highlight[i*3+j]=val;
+    }
+
+
+
+    gl->glGenTextures(NumTextures,Textures );
+
+    gl->glBindTexture(GL_TEXTURE_1D, Textures[HSVtexture]);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    gl->glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 16, 0, GL_RGB, GL_FLOAT, hsvColors);
+
+    gl->glBindTexture(GL_TEXTURE_1D, Textures[HighlightTexture]);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    gl->glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 1024, 0, GL_RGB, GL_FLOAT, highlight);
+
+    gl->glBindTexture(GL_TEXTURE_1D, Textures[RedTexture]);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    gl->glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 2, 0, GL_RGB, GL_FLOAT, red);
+
+    gl->glBindTexture(GL_TEXTURE_1D, Textures[GreenTexture]);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    gl->glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 2, 0, GL_RGB, GL_FLOAT, green);
+
+    gl->glBindTexture(GL_TEXTURE_1D, Textures[BlueTexture]);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl->glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    gl->glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 2, 0, GL_RGB, GL_FLOAT, blue);
+
+    gl->glBindTexture(GL_TEXTURE_1D,0);
+
+    delete[] hsvColors;
+    delete[] highlight;
+    delete[] red;
+    delete[] green;
+    delete[] blue;
+    texturesCreated=true;
+}
+
+void CLorenzLine::uniformsAndDraw()
 {
     gl->glDisable(GL_CULL_FACE);
     texOffset-=0.001f;
@@ -151,12 +195,12 @@ void CLorezLine::uniformsAndDraw()
     m_program->setUniformValue("tex", 0); //set to 0 because the texture is bound to GL_TEXTURE0
     m_program->setUniformValue("highlight", 1); //set to 1 because the texture is bound to GL_TEXTURE0
     gl->glActiveTexture(GL_TEXTURE0);
-    gl->glBindTexture(GL_TEXTURE_1D, Textures[HSVtexture]);
+    gl->glBindTexture(GL_TEXTURE_1D, Textures[RedTexture]);
     gl->glActiveTexture(GL_TEXTURE1);
-    textureTest->bind();
+    gl->glBindTexture(GL_TEXTURE_1D, Textures[HighlightTexture]);
     gl->glDrawArrays(GL_LINE_STRIP,0,iNumOfPoints);
     gl->glActiveTexture(GL_TEXTURE1);
-    textureTest->release();
+    gl->glBindTexture(GL_TEXTURE_1D,0);
     gl->glActiveTexture(GL_TEXTURE0);
     gl->glBindTexture(GL_TEXTURE_1D,0);
 }

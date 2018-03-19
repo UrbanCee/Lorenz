@@ -18,30 +18,32 @@ class LorenzCalc
 };
 
 
-class CLorezLine : public CBaseObjectFactory
+class CLorenzLine : public CBaseObjectFactory
 {
 public:
-    CLorezLine();
-    ~CLorezLine();
+    CLorenzLine();
+    ~CLorenzLine();
 protected:
     virtual bool createBuffers();
     virtual void uniformsAndDraw();
     virtual void deleteBuffers();
 
 private:
+    static void createTextures(QOpenGLFunctions_4_0_Core *);
     enum VAO_IDs { BasicObject, NumVAOs };
-    enum Buffer_IDs { VertexBuffer, ColorBuffer,TextCoordBuffer, NumBuffers };
-    enum Attrib_IDs { vVertexPosition = 0 , vVertexColor = 1 , vVertexTexCoord = 2};
-    enum Texture_IDs { HSVtexture, NumTextures};
+    enum Buffer_IDs { VertexBuffer, TextCoordBuffer, NumBuffers };
+    enum Attrib_IDs { vVertexPosition = 0 , vVertexTexCoord = 1};
+    enum Texture_IDs { HSVtexture, HighlightTexture, RedTexture, GreenTexture, BlueTexture , NumTextures};
 
 
     GLuint Buffers[NumBuffers];
-    GLuint Textures[NumTextures];
+    static GLuint Textures[NumTextures];
 
-    QOpenGLTexture *textureTest;
 
-    int iNumOfPoints = 4000;
-    float texOffset=1.0f;
+    int iNumOfPoints = 100000;
+    float texOffset=0.0f;
+
+    static bool texturesCreated;
 
 
 };

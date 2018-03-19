@@ -22,7 +22,7 @@ void MyGLWidget::initializeGL()
     QString versionString1(QLatin1String(reinterpret_cast<const char*>(glGetString(GL_VERSION))));
     emit(showStatusBarMessage(QString("OpenGL Version: ")+versionString1,10000));
     coordSys = new CCoordSys();
-    lorenzLine = new CLorezLine();
+    lorenzLine = new CLorenzLine();
     coordSys->initialize(this);
     //toroid.initialize(this);
     transformation.translate(0.0f,0.0f,-20.0f);

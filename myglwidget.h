@@ -45,7 +45,7 @@ private:
 
 
     CCoordSys *coordSys;
-    CLorezLine *lorenzLine;
+    CLorenzLine *lorenzLine;
 
 
 
